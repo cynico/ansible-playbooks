@@ -1,0 +1,31 @@
+---
+- hosts: master
+
+  tasks:
+    - name: Check if k8s network is already initialized.
+      shell: 
+        cmd: kubectl get nodes
+      register: k8s_network_configuration
+      ignore_errors: yes
+
+    - name: Initializing the cluster.
+      block:
+        - shell:
+            cmd: kubeadm init --pod-network-cidr 10.1.0.0/16 --kubernetes-version 1.22.0 --ignore-preflight-errors=Mem
+          become: yes
+
+        - file:
+            path: "{{ lookup('env', 'HOME') }}/.kube"
+            state: directory
+        - copy:
+            remote_src: /etc/kubernetes/admin.conf
+            dest: "{{ lookup('env', 'HOME') }}/.kube/config"
+            owner: "{{ ansible_env.USER }}" 
+            group: "{{ ansible_env.USER }}"
+       
+        - shell:
+            cmd: kubectl get nodes
+
+        - shell:
+           cmd: "kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml"
+      when: k8s_network_configuration.stderr != ""
