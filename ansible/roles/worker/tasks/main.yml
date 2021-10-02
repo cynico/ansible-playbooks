@@ -1,0 +1,4 @@
+---
+- name: Joining the cluster
+  shell:
+    cmd: "{{ kubeadm_join_command }}"

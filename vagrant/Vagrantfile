@@ -1,0 +1,39 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+	# General Vagrant VM configuration.
+	
+	config.vm.box = "bento/ubuntu-20.04"	
+	config.ssh.insert_key = false
+	config.vm.synced_folder ".", "/vagrant", disabled: true
+	config.vm.provider :virtualbox do |v|
+		v.memory = 1000
+		v.linked_clone = true
+	end
+	
+	boxes = [
+		{ :name => "master", :ip => "192.168.69.8" },
+		{ :name => "worker1", :ip => "192.168.69.9" },
+		{ :name => "worker2", :ip => "192.168.69.10" }
+	]
+
+	boxes.each do |opts|
+		config.vm.define opts[:name] do |config|
+			config.vm.hostname = opts[:name]
+			config.vm.network :private_network, ip: opts[:ip]
+			
+			if opts[:name] == "worker2"
+				config.vm.provision "ansible" do |ansible|
+					ansible.limit = "all"
+					ansible.verbose = "vv"
+					ansible.playbook = "../ansible/playbook.yml"
+					ansible.inventory_path = "../ansible/hosts.ini"
+				end
+			end
+		end
+	end
+end

@@ -1,0 +1,9 @@
+---
+- name: Load the new sysctl configuration
+  shell:
+    cmd: sysctl --system
+
+- name: Restart containerd
+  service:
+    name: containerd
+    state: restarted

@@ -1,0 +1,50 @@
+# First: gathering the ips of the master machines, and the worker machines. [To avoid hardcoded addresses]
+- hosts: masters
+  tasks:
+    - set_fact:
+        my_masters_list: "{{ ansible_play_hosts }}"
+      run_once: true
+      delegate_to: localhost
+      delegate_facts: true
+
+- hosts: workers
+  tasks:
+    - set_fact:
+        my_workers_list: "{{ ansible_play_hosts }}"
+      run_once: true
+      delegate_to: localhost
+      delegate_facts: true
+
+- hosts: all
+  become: yes
+  pre_tasks:
+    
+    - name: Setting the list of masters and workers as facts local to the machine.
+      set_fact:
+        my_masters_list: "{{ hostvars['localhost']['my_masters_list'] }}"
+        my_workers_list: "{{ hostvars['localhost']['my_workers_list'] }}"
+    
+    - name: Render the template.
+      template:
+        src: roles/all/templates/playbook_template.j2
+        dest: roles/all/tasks/main.yml
+      delegate_to: localhost
+      become: no
+
+- hosts: all
+  become: yes
+  roles:
+  - all
+
+- hosts: masters
+  become: yes
+  roles:
+  - master
+
+- hosts: workers
+  become: yes
+  pre_tasks:
+    - set_fact:
+        kubeadm_join_command: "{{ hostvars['localhost']['kubeadm_join_command'] }}"
+  roles:
+  - worker
