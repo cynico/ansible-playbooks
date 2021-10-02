@@ -12,7 +12,6 @@
       shell:
         cmd: "kubeadm init --apiserver-advertise-address={{ my_masters_list[0] }} --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=Mem"
       become: yes
-      tags: tobeskipped
 
     - name: Registering the kubeadm join command.
       shell:
@@ -30,7 +29,6 @@
       shell: "echo $HOME"
       become: false
       register: user_home
-      tags: only
     
     - name: Create the $HOME/.kube directory
       file:
@@ -45,11 +43,9 @@
         dest: "{{ user_home.stdout }}/.kube/config"
         owner: "{{ ansible_env.USER }}" 
         group: "{{ ansible_env.USER }}"
-      tags: only
 
     - name: Applying the flannel cni networking.
       shell:
        cmd: "kubectl apply -f https://raw.githubusercontent.com/cynico/flannel/master/Documentation/kube-flannel.yml"
       become: false
-      tags: flannel
   when: k8s_network_configuration.stderr != ""

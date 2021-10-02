@@ -4,14 +4,12 @@
   lineinfile:
     line: "worker{{ loop.index }} {{ worker }}"
     path: /etc/hosts
-  tags: hosts
 {% endfor %}
 
 - name: Adding master nodes to /etc/hosts files on all nodes.
   lineinfile:
     line: "{% for master in my_masters_list %}master{{ loop.index }} {{ master }}{% endfor %}"
     path: /etc/hosts
-  tags: hosts
 
 - name: "Setting up kernel modules configuration, and network configuration for both: containerd and k8s."
   block:  
@@ -110,5 +108,4 @@
         cmd: apt-mark hold kubelet kubeadm kubectl
       register: hold_output
       changed_when: ("kubelet was already set on hold" not in hold_output.stdout) and ("kubeadm was already set on hold" not in hold_output.stdout) and ("kubectl was already set on hold" not in hold_output.stdout)
-      tags: hold
 
