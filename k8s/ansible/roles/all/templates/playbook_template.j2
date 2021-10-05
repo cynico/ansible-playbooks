@@ -2,13 +2,13 @@
 {% for worker in my_workers_list %}
 - name: Adding worker nodes to /etc/hosts files on all nodes.
   lineinfile:
-    line: "worker{{ loop.index }} {{ worker }}"
+    line: "{{ worker }} worker{{ loop.index }}"
     path: /etc/hosts
 {% endfor %}
 
 - name: Adding master nodes to /etc/hosts files on all nodes.
   lineinfile:
-    line: "{% for master in my_masters_list %}master{{ loop.index }} {{ master }}{% endfor %}"
+    line: "{% for master in my_masters_list %}{{ master }} master{{ loop.index }}{% endfor %}"
     path: /etc/hosts
 
 - name: "Setting up kernel modules configuration, and network configuration for both: containerd and k8s."
